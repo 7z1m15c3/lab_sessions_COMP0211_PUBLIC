@@ -39,6 +39,10 @@ def simulate_with_given_pid_values(sim_, kp, joints_id, regulation_displacement=
     kp_vec[joints_id] = kp
 
     kd = np.array([0]*dyn_model.getNumberofActuatedJoints())
+    print(f"the kd is {kd}")
+    print(f"the kp_vec is {kp_vec}")
+    print(f"the kp is {kp}")
+    print(f"the magic number is {dyn_model.getNumberofActuatedJoints()}")
     # IMPORTANT: to ensure that no side effect happens, we need to copy the initial joint angles
     q_des = init_joint_angles.copy()
     qd_des = np.array([0]*dyn_model.getNumberofActuatedJoints())
@@ -47,6 +51,7 @@ def simulate_with_given_pid_values(sim_, kp, joints_id, regulation_displacement=
 
    
     time_step = sim_.GetTimeStep()
+    print(f"the time step is {time_step}")
     current_time = 0
     # Command and control loop
     cmd = MotorCommands()  # Initialize command structure for motors
@@ -93,7 +98,17 @@ def simulate_with_given_pid_values(sim_, kp, joints_id, regulation_displacement=
 
     
     # TODO make the plot for the current joint
-    
+    # Plot the joint angle
+    plt.figure()
+    plt.plot(np.array(q_mes_all).T[0])
+
+    plt.title("Joint angle")
+    plt.xlabel("Time")
+    plt.ylabel("Angle")
+    plt.grid(True)
+    plt.show()
+
+
     
     return q_mes_all
      
@@ -125,7 +140,7 @@ def perform_frequency_analysis(data, dt):
 
 if __name__ == '__main__':
     joint_id = 0  # Joint ID to tune
-    regulation_displacement = 1.0  # Displacement from the initial joint position
+    regulation_displacement = 2.0  # Displacement from the initial joint position
     init_gain=1000 
     gain_step=1.5 
     max_gain=10000 
@@ -134,5 +149,10 @@ if __name__ == '__main__':
 
     # TODO using simulate_with_given_pid_values() and perform_frequency_analysis() write you code to test different Kp values 
     # for each joint, bring the system to oscillation and compute the the PD parameters using the Ziegler-Nichols method
+    Kd = [0,0,0,0,0,0,0]
+    Kp = [0,1000,1000,1000,1000,1000,1000]
+    kp =18
 
-   
+    simulate_with_given_pid_values(sim, kp, 0, regulation_displacement, test_duration)
+        #perform_frequency_analysis(sim, 0.01)
+
