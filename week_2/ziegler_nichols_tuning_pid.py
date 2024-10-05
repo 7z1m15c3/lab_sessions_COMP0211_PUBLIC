@@ -3,6 +3,7 @@ import numpy as np
 from numpy.fft import fft, fftfreq
 import time
 from matplotlib import pyplot as plt
+import zieglerPlot as zp
 from simulation_and_control import pb, MotorCommands, PinWrapper, feedback_lin_ctrl, SinusoidalReference, CartesianDiffKin
 
 
@@ -96,11 +97,14 @@ def simulate_with_given_pid_values(sim_, kp, joints_id, regulation_displacement=
         current_time += time_step
         #print("current time in seconds",current_time)
 
+    #clean the data
+    for i in range(1000):
+        q_mes_all.pop(0)
     
     # TODO make the plot for the current joint
     # Plot the joint angle
     plt.figure()
-    plt.plot(np.array(q_mes_all).T[0])
+    plt.plot(np.array(q_mes_all).T[joints_id])
 
     plt.title("Joint angle")
     plt.xlabel("Time")
@@ -130,17 +134,17 @@ def perform_frequency_analysis(data, dt):
     plt.grid(True)
     plt.show()
 
+
+
     return xf, power
 
 
-# TODO Implement the table in thi function
-
-
+# TODO Implement the table in this function
 
 
 if __name__ == '__main__':
-    joint_id = 0  # Joint ID to tune
-    regulation_displacement = 2.0  # Displacement from the initial joint position
+    joint_id = 1  # Joint ID to tune
+    regulation_displacement = 1.0  # Displacement from the initial joint position
     init_gain=1000 
     gain_step=1.5 
     max_gain=10000 
@@ -150,9 +154,19 @@ if __name__ == '__main__':
     # TODO using simulate_with_given_pid_values() and perform_frequency_analysis() write you code to test different Kp values 
     # for each joint, bring the system to oscillation and compute the the PD parameters using the Ziegler-Nichols method
     Kd = [0,0,0,0,0,0,0]
-    Kp = [0,1000,1000,1000,1000,1000,1000]
-    kp =18
+    Kp = [16.5,20,8.5,1000,1000,1000,1000]
+    cur_kp =Kp[joint_id]
+    ##joint 
 
-    simulate_with_given_pid_values(sim, kp, 0, regulation_displacement, test_duration)
-        #perform_frequency_analysis(sim, 0.01)
+    data = simulate_with_given_pid_values(sim, cur_kp, joint_id, regulation_displacement, test_duration)
+    
 
+    Ku = cur_kp
+    xf, power  = perform_frequency_analysis(np.array(data).T[joint_id],0.001)
+
+    power[np.argmax(power)] = 0
+    dominant_freq = xf[np.argmax(power)]
+    print(f"The dominant frequency is: {dominant_freq}")
+    Tu = 1 / dominant_freq
+
+    zp.print_pid_table(zp.ziegler_nichols(Ku, Tu))
